@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💌</title>
+    <link rel="icon" href="flecha.png" type="image/png">
+    <style>
+        /* Estilos generales para centrar el contenido y fondo */
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4ece6; /* Color de fondo suave */
+            font-family: 'Arial', sans-serif;
+            overflow: hidden; /* Evita barras de desplazamiento durante la animación */
+        }
+
+        /* Contenedor principal de las imágenes */
+        .container {
+            position: relative;
+            width: 90%; /* Ancho responsive */
+            max-width: 600px; /* Ancho máximo para que no se vea enorme en PC */
+            aspect-ratio: 3 / 4; /* Mantiene una proporción similar a las imágenes */
+        }
+
+        /* Estilos comunes para las capas del sobre y la carta */
+        .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            transition: all 0.8s ease-in-out; /* Suavidad de la transición */
+            backface-visibility: hidden;
+        }
+
+        /* Estilos de las imágenes dentro de las capas */
+        .layer img {
+            width: 100%;
+            height: auto;
+            display: block;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15); /* Sombra suave */
+            border-radius: 5px;
+        }
+
+        /* --- Capa del Sobre (Inicial) --- */
+        #envelope-layer {
+            z-index: 2; /* Está por encima al principio */
+            cursor: pointer; /* Manito al pasar el mouse */
+        }
+
+        /* Clase que se añade al hacer click en el sobre */
+        #envelope-layer.open {
+            opacity: 0; /* Se desvanece */
+            transform: scale(1.1); /* Crece un poquito al desaparecer */
+            pointer-events: none; /* Ya no se le puede hacer click */
+        }
+
+        /* --- Capa de la Carta (Final) --- */
+        #letter-layer {
+            z-index: 1; /* Está por debajo */
+            position: relative; /* Necesario para posicionar el botón invisible */
+        }
+
+        /* El botón invisible sobre el sello de Judith */
+        /* AJUSTE IMPORTANTE: Estos porcentajes posicionan el área clickeable sobre el sello.
+           Si tus imágenes tienen dimensiones diferentes, podrías tener que ajustar estos valores. */
+        #seal-trigger {
+            position: absolute;
+            /* Coordenadas aproximadas del sello en image_1.png */
+            bottom: 4%;  
+            right: 10%;
+            width: 18%;
+            height: 12%;
+            
+            background-color: rgba(255, 0, 0, 0.2); /* Color rojo semitransparente para pruebas (BORRAR LUEGO) */
+            opacity: 0; /* Hacerlo invisible en la versión final */
+            
+            cursor: pointer;
+            border-radius: 50%;
+            z-index: 10;
+        }
+
+        /* --- Ventana Modal del Mensaje Final --- */
+        #final-message-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7); /* Fondo oscuro semitransparente */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        /* Cuando el modal está activo */
+        #final-message-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* La cajita blanca del mensaje */
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+        
+        #final-message-modal.active .modal-content {
+             transform: scale(1); /* Efecto pop-up */
+        }
+
+        .modal-content h2 {
+            color: #5E180A; /* Color rojo amor */
+            margin: 0;
+            font-size: 1.5em;
+        }
+        
+        .close-note {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 15px;
+        }
+
+        /* Estilo del botón de la canción */
+        .song-btn {
+            display: inline-block;
+            background-color: #5E180A; /* Rojo amor */
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .song-btn:hover {
+            background-color: #b71c1c;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="letter-layer" class="layer">
+            <img src="image_1.png" alt="Carta de Judith">
+            <div id="seal-trigger"></div>
+        </div>
+
+        <div id="envelope-layer" class="layer">
+            <img src="image_0.png" alt="Sobre con sello TAP">
+        </div>
+    </div>
+
+    <div id="final-message-modal">
+        <div class="modal-content">
+            <h2>✨Feliz primer mes siendo novios✨</h2>
+            <p>Te quieroooo 😘</p>
+            <p class="close-note">Espero que esta canción te muestre lo bonito que me haces sentir...</p>
+            <a href="TU_LINK_DE_CANCION_AQUI" target="_blank" class="song-btn">
+                CLICK AQUÍ
+            </a>
+        </div>
+    </div>
+
+
+    <script>
+        // Obtenemos los elementos del HTML
+        const envelope = document.getElementById('envelope-layer');
+        const sealTrigger = document.getElementById('seal-trigger');
+        const modal = document.getElementById('final-message-modal');
+
+        // --- Acción 1: Abrir el sobre ---
+        // Escuchamos el click en el sobre (image_0.png)
+        envelope.addEventListener('click', function() {
+            // Añadimos la clase '.open' que activa la transición CSS (desvanecer)
+            envelope.classList.add('open');
+        }, { once: true }); // 'once: true' asegura que solo se ejecute una vez
+
+        // --- Acción 2: Mostrar mensaje final ---
+        // Escuchamos el click en el área invisible sobre el sello de la carta
+        sealTrigger.addEventListener('click', function(e) {
+            // Evitamos que el click se propague (buenas prácticas)
+            e.stopPropagation();
+            // Mostramos la ventana modal
+            modal.classList.add('active');
+        });
+
+        // --- Acción 3: Cerrar el modal ---
+        // Si hacen click en cualquier parte del fondo oscuro del modal, se cierra
+        modal.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+    </script>
+
+</body>
+</html>
